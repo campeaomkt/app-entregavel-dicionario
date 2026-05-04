@@ -57,10 +57,10 @@ const PianoKeyboard: React.FC<PianoKeyboardProps> = ({ highlightedNotes }) => {
   const isHigh = (idx: number) => highlightedNotes.includes(idx);
 
   return (
-    <div className="w-full max-w-[340px] relative group mx-auto">
+    <div className="w-full max-w-[340px] md:max-w-3xl relative group mx-auto">
       <div 
         ref={containerRef}
-        className="w-full overflow-hidden rounded-[15px] border-[4px] border-black select-none touch-none bg-white"
+        className="w-full overflow-hidden rounded-[15px] md:rounded-[20px] border-[4px] md:border-[6px] border-black select-none touch-none bg-white shadow-xl"
       >
         <motion.div 
           ref={contentRef}
@@ -69,8 +69,8 @@ const PianoKeyboard: React.FC<PianoKeyboardProps> = ({ highlightedNotes }) => {
           dragElastic={0.1}
           initial={false}
           animate={{ x: 0 }}
-          className="relative h-[110px] flex bg-white cursor-grab active:cursor-grabbing"
-          style={{ width: '160%' }} // Shows about 14 white keys, making them less "fat" but the reduced height makes them less "stretched"
+          className="relative h-[110px] md:h-[220px] flex bg-white cursor-grab active:cursor-grabbing"
+          style={{ width: '150%' }} 
         >
           <div className="flex h-full w-full">
             {whiteKeys.map((idx, i) => (
@@ -87,18 +87,18 @@ const PianoKeyboard: React.FC<PianoKeyboardProps> = ({ highlightedNotes }) => {
           {blackKeys.map((bk, i) => (
             <div
               key={i}
-              className={`absolute top-0 w-[3%] h-[60%] border-x border-b border-black rounded-b-[2px] transition-colors duration-150 ${
+              className={`absolute top-0 w-[3.5%] h-[60%] border-x border-b border-black rounded-b-[2px] transition-colors duration-150 ${
                 isHigh(bk.index) ? 'bg-[#ff3b3b]' : 'bg-black'
               }`}
               style={{
-                left: `${(bk.leftShift * (100 / 22)) - 1.5}%`,
+                left: `${(bk.leftShift * (100 / 22)) - 1.75}%`,
               }}
             />
           ))}
         </motion.div>
       </div>
       
-      {/* Visual fade hint for more notes */}
+      {/* Visual fade hint */}
       <div className="absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-black/20 to-transparent pointer-events-none rounded-r-[20px]" />
     </div>
   );
