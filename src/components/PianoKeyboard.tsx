@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { NOTES } from '../constants';
 
 interface PianoKeyboardProps {
@@ -6,50 +7,99 @@ interface PianoKeyboardProps {
 }
 
 const PianoKeyboard: React.FC<PianoKeyboardProps> = ({ highlightedNotes }) => {
-  // We'll show exactly two octaves + C as per the reference image (15 white keys)
-  const whiteKeys = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24];
-  const blackKeys = [
-    { index: 1, leftShift: 1 },  // C#
-    { index: 3, leftShift: 2 },  // Eb
-    { index: 6, leftShift: 4 },  // F#
-    { index: 8, leftShift: 5 },  // G#
-    { index: 10, leftShift: 6 }, // Bb
-    { index: 13, leftShift: 8 }, // C# 2nd
-    { index: 15, leftShift: 9 }, // Eb 2nd
-    { index: 18, leftShift: 11 },// F# 2nd
-    { index: 20, leftShift: 12 },// G# 2nd
-    { index: 22, leftShift: 13 },// Bb 2nd
-  ];
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0 });
 
-  // Helper to check if a note index is highlighted
-  // Since we only receive 0-11, we check (index % 12)
-  const isHigh = (idx: number) => highlightedNotes.includes(idx % 12);
+  useEffect(() => {
+    const updateConstraints = () => {
+      if (containerRef.current && contentRef.current) {
+        const parentWidth = containerRef.current.offsetWidth;
+        const width = contentRef.current.offsetWidth;
+        setDragConstraints({ left: -(width - parentWidth), right: 0 });
+      }
+    };
+
+    updateConstraints();
+    window.addEventListener('resize', updateConstraints);
+    return () => window.removeEventListener('resize', updateConstraints);
+  }, []);
+
+  // Find the lowest note to determine the keyboard's starting point (always start at a C)
+  const lowestNote = highlightedNotes.length > 0 ? Math.min(...highlightedNotes) : 0;
+  const startOffset = Math.floor(lowestNote / 12) * 12;
+
+  // Show exactly 3 full octaves (22 white keys including the last C)
+  const whiteKeyPatterns = [0, 2, 4, 5, 7, 9, 11];
+  const whiteKeys: number[] = [];
+  for (let i = 0; i < 22; i++) {
+    const octave = Math.floor(i / 7);
+    const patternIdx = i % 7;
+    whiteKeys.push(startOffset + (octave * 12) + whiteKeyPatterns[patternIdx]);
+  }
+
+  // Black keys (5 per octave)
+  const blackKeyPatterns = [1, 3, 6, 8, 10];
+  const blackKeys: { index: number; leftShift: number }[] = [];
+  
+  for (let oct = 0; oct < 4; oct++) {
+    blackKeyPatterns.forEach((p, pIdx) => {
+      const idx = startOffset + (oct * 12) + p;
+      const whiteKeyPosInOctave = [0, 1, 3, 4, 5]; 
+      const shift = (oct * 7) + whiteKeyPosInOctave[pIdx] + 1;
+      
+      if (shift < 22) {
+        blackKeys.push({ index: idx, leftShift: shift });
+      }
+    });
+  }
+
+  const isHigh = (idx: number) => highlightedNotes.includes(idx);
 
   return (
-    <div className="relative w-full aspect-[2.5/1] bg-white rounded-[15px] overflow-hidden border-[4px] border-black select-none">
-      <div className="flex h-full w-full">
-        {whiteKeys.map((idx, i) => (
-          <div
-            key={i}
-            className={`flex-1 border-r border-black last:border-r-0 transition-colors duration-200 ${
-              isHigh(idx) ? 'bg-[#ff0000]' : 'bg-white'
-            }`}
-          />
-        ))}
-      </div>
+    <div className="w-full max-w-[340px] relative group mx-auto">
+      <div 
+        ref={containerRef}
+        className="w-full overflow-hidden rounded-[15px] border-[4px] border-black select-none touch-none bg-white"
+      >
+        <motion.div 
+          ref={contentRef}
+          drag="x"
+          dragConstraints={dragConstraints}
+          dragElastic={0.1}
+          initial={false}
+          animate={{ x: 0 }}
+          className="relative h-[110px] flex bg-white cursor-grab active:cursor-grabbing"
+          style={{ width: '160%' }} // Shows about 14 white keys, making them less "fat" but the reduced height makes them less "stretched"
+        >
+          <div className="flex h-full w-full">
+            {whiteKeys.map((idx, i) => (
+              <div
+                key={i}
+                className={`flex-1 border-r border-black last:border-r-0 transition-colors duration-150 ${
+                  isHigh(idx) ? 'bg-[#ff3b3b]' : 'bg-white'
+                }`}
+              />
+            ))}
+          </div>
 
-      {/* Black Keys */}
-      {blackKeys.map((bk, i) => (
-        <div
-          key={i}
-          className={`absolute top-0 w-[4.5%] h-[60%] border-x border-b border-black rounded-b-[4px] transition-colors duration-200 ${
-            isHigh(bk.index) ? 'bg-[#ff0000]' : 'bg-black'
-          }`}
-          style={{
-            left: `${(bk.leftShift * (100 / 15)) - 2.25}%`,
-          }}
-        />
-      ))}
+          {/* Black Keys */}
+          {blackKeys.map((bk, i) => (
+            <div
+              key={i}
+              className={`absolute top-0 w-[3%] h-[60%] border-x border-b border-black rounded-b-[2px] transition-colors duration-150 ${
+                isHigh(bk.index) ? 'bg-[#ff3b3b]' : 'bg-black'
+              }`}
+              style={{
+                left: `${(bk.leftShift * (100 / 22)) - 1.5}%`,
+              }}
+            />
+          ))}
+        </motion.div>
+      </div>
+      
+      {/* Visual fade hint for more notes */}
+      <div className="absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-black/20 to-transparent pointer-events-none rounded-r-[20px]" />
     </div>
   );
 };

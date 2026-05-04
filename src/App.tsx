@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NOTES, VARIATIONS, getChordNotes } from './constants';
 import PianoKeyboard from './components/PianoKeyboard';
+import { MousePointer2, MoveHorizontal } from 'lucide-react';
 
 export default function App() {
   const [tom, setTom] = useState('C');
@@ -20,13 +21,18 @@ export default function App() {
   const currentVariation = VARIATIONS.find(v => v.value === tipo);
 
   return (
-    <div className="min-h-[100dvh] bg-[#1a1a1a] text-white flex flex-col items-center p-4 pt-10">
+    <div className="min-h-[100dvh] bg-[#1a1a1a] text-white flex flex-col items-center p-4 pt-6">
       {/* LOGO */}
-      <div className="mb-12 flex items-center gap-4">
-        <div className="bg-[#ff0000] p-1 rounded-sm flex gap-[2px]">
-          <div className="bg-white w-4 h-12"></div>
-          <div className="bg-white w-4 h-12"></div>
-          <div className="bg-white w-4 h-12"></div>
+      <div className="mb-10 flex items-center gap-4">
+        <div className="bg-[#ff3b3b] w-14 h-14 rounded-[14px] flex items-end p-1.5 gap-[3px] relative overflow-hidden">
+          {/* White Keys */}
+          <div className="flex-1 bg-white h-full rounded-[2px]"></div>
+          <div className="flex-1 bg-white h-full rounded-[2px]"></div>
+          <div className="flex-1 bg-white h-full rounded-[2px]"></div>
+          
+          {/* Black Keys (using the red background) */}
+          <div className="absolute top-1.5 left-4 w-[7px] h-7 bg-[#ff3b3b] rounded-b-[1.5px]"></div>
+          <div className="absolute top-1.5 right-4 w-[7px] h-7 bg-[#ff3b3b] rounded-b-[1.5px]"></div>
         </div>
         <div className="flex flex-col leading-none">
           <span className="text-3xl font-black tracking-tight">DICIONÁRIO</span>
@@ -35,7 +41,7 @@ export default function App() {
       </div>
 
       {/* CONTROLES */}
-      <div className="w-full max-w-sm space-y-9 mb-9">
+      <div className="w-full max-w-sm space-y-6 mb-9">
         <div className="campo">
           <label className="custom-label" htmlFor="tom-select">Tom</label>
           <select 
@@ -76,17 +82,28 @@ export default function App() {
             transition={{ duration: 0.15 }}
             className="w-full flex flex-col items-center"
           >
-            <h2 className="text-[42px] font-black text-[#ff3b3b] mb-10 tracking-tight">
+            <h2 className="text-[36px] font-black text-[#ff3b3b] mb-10 tracking-tight">
               {tom} {currentVariation?.label}
             </h2>
             
-            <div className="w-full mb-12">
+            <div className="w-full mb-2">
                <PianoKeyboard highlightedNotes={chordNotes} />
             </div>
 
-            <p className="text-[32px] text-white font-medium tracking-widest">
-              {chordNotes.map(idx => NOTES[idx]).join(' - ')}
-            </p>
+            <div className="flex items-center gap-2 mb-8 opacity-40 animate-pulse">
+               <MoveHorizontal className="w-4 h-4 text-gray-400" />
+               <span className="text-[12px] font-bold tracking-[0.15em] text-gray-400 uppercase">Arraste para visualizar</span>
+            </div>
+
+            <div className="w-full text-center px-2">
+              <p className="text-[24px] text-white font-medium tracking-[0.2em] leading-tight flex flex-wrap justify-center gap-y-2">
+                {chordNotes.map((idx, i) => (
+                  <span key={i} className="whitespace-nowrap">
+                    {NOTES[idx % 12]}{i < chordNotes.length - 1 && <span className="mx-2 text-gray-500">-</span>}
+                  </span>
+                ))}
+              </p>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
