@@ -1,0 +1,6 @@
+{
+  "name": "Dicionário de Acordes",
+  "description": "Um dicionário interativo de acordes para teclado, permitindo visualizar as notas de diferentes tons e variações.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
